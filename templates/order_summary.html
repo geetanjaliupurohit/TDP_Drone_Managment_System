@@ -1,5 +1,5 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
@@ -131,115 +131,47 @@
             <!-- ============================================================== -->
             <!-- ============================================================== -->
             <!-- wrapper  -->
-        <div class="dashboard-wrapper">
-            <div class="dashboard-ecommerce">
-                <div class="container-fluid dashboard-content ">
-                    <!-- ============================================================== -->
-                    <!-- pageheader  -->
-                    <!-- ============================================================== -->
-                    <div class="row">
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <div class="page-header">
-                                <h2 class="pageheader-title">Delivery Instant Support</h2>
-                                <div class="page-breadcrumb">
-                                    <nav aria-label="breadcrumb">
-                                        <ol class="breadcrumb">
-                                            <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Alerts</a></li>
-                                            <li class="breadcrumb-item active" aria-current="page">Delivery Instant Support</li>
-                                        </ol>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- ============================================================== -->
-                    <!-- end pageheader  -->
-                    <!-- ============================================================== -->
-          
     
-		<div class="container">
-			<div class="contact100-map" id="google_map" data-map-x="40.722047" data-map-y="-73.986422" data-pin="images/icons/map-marker.png" data-scrollwhell="0" data-draggable="1"></div>
-		
-			<div class="wrap-contact100">
-			  <form class="contact100-form validate-form" action="/TwilioForm" method="post">
-				<span class="contact100-form-title">
-				  Waiting Long, Order hasn' reached?Send an instant message to the restraunt. To get instant support
-				</span>
-                <br>
-           
-                <br>
-                <div class="col-75">
-				  <input class="input100" type="text" name="sid" placeholder=" Twilio SID" id="sid">
-				  <span class="focus-input100"></span>
-				</div>
-                <br>
-		
-	  
-                <div class="col-75">
-				  <input class="input100" type="text" name="token" placeholder="Twilio Token" id="token">
-				  <span class="focus-input100"></span>
-				</div>
-                <br>
-             
-	  
-                <div class="col-75">
-				  <input class="input100" type="text" name="wpfrom" placeholder=" Whatsapp No From." id="wpfrom">
-				  <span class="focus-input100"></span>
-				</div>
-                <br>
-              
-	  
-                <div class="col-75">
-				  <input class="input100" type="text" name="wpto" placeholder="Whatsapp No To." id="wpto">
-				  <span class="focus-input100"></span>
-				</div>
-                <br>
-            
-		
-			  
-                <div class="col-75">
-				  <textarea class="input100" name="msg" placeholder="Enter Msg" id="msg"></textarea>
-				  <span class="focus-input100"></span>
-				</div>
-                <br>
-                <center>
-				<div class="col-75">
-				  <button onclick="myFunction()" class="contact100-form-btn">
-					Get Support
-				  </button>
-				</div>
-            </center>
-			  </form>
-		
-			</div>
-		  </div>
+            <div class="dashboard-wrapper">
+                <div class="dashboard-ecommerce">
+                    <div class="container-fluid dashboard-content ">
+                        <div id="map"></div>
+                        <hr>
+                        <h1>Order Details</h1>
+                        <hr>
+                        <h3>Distance</h3>
+                        <p>{{ distance }}</p>
+                        <h3>Duration</h3>
+                        <p>{{ duration }}</p>
+                        <h3>Drone type</h3>
+                        <p>{{ drone_name }}</p>
+                        <h3>Weight of Food</h3>
+                        <p>{{ weight_of_food }}</p>
+
+                        <h1>Dynamic Table</h1>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <th scope="row">{{ item.id }}</th>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+
     </div>
-</div>
-</div>
-
-
-
-
-        </div>
-        <!-- ============================================================== -->
-        <!-- end wrapper  -->
-        <!-- ============================================================== -->
     </div>
-   
-    <div class="footer">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
-                     Copyright@2023 G 55</a>.
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-</div>
-
+    
 <!-- Optional JavaScript -->
 <!-- jquery 3.3.1 -->
 <script src="static/assets/vendor/jquery/jquery-3.3.1.min.js"></script>
@@ -261,6 +193,50 @@
 <script src="static/assets/vendor/charts/c3charts/d3-5.4.0.min.js"></script>
 <script src="static/assets/vendor/charts/c3charts/C3chartjs.js"></script>
 <script src="static/assets/libs/js/dashboard-ecommerce.js"></script>
-</body>
+<script>
+        function initMap() {
+            var startPlace = "{{ start }}";
+            var endPlace = "{{ end }}";
 
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 5,
+                center: { lat: -25.363, lng: 131.044 } // Default center
+            });
+
+            var geocoder = new google.maps.Geocoder();
+
+            geocoder.geocode({ address: startPlace }, function(results, status) {
+                if (status === 'OK') {
+                    var startMarker = new google.maps.Marker({
+                        map: map,
+                        position: results[0].geometry.location,
+                        title: 'Start Place'
+                    });
+
+                    geocoder.geocode({ address: endPlace }, function(results, status) {
+                        if (status === 'OK') {
+                            var endMarker = new google.maps.Marker({
+                                map: map,
+                                position: results[0].geometry.location,
+                                title: 'End Place'
+                            });
+
+                            var line = new google.maps.Polyline({
+                                path: [startMarker.getPosition(), endMarker.getPosition()],
+                                geodesic: true,
+                                strokeColor: '#0000FF',
+                                strokeOpacity: 1.0,
+                                strokeWeight: 2
+                            });
+
+                            line.setMap(map);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7nK6bajhNpy2h_EfuNs4tf7Peprgk0vE&callback=initMap"></script>
+</body>
 </html>

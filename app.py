@@ -11,15 +11,22 @@ from sqlalchemy.types import Integer  # Import Integer type
 from datetime import datetime, timedelta
 import pandas as pd
 
+import googlemaps
+
 
 
 
 app = Flask(__name__)#syntax to initialize app
 
 
+# Replace 'YOUR_API_KEY' with your actual API key
+gmaps = googlemaps.Client(key='AIzaSyC7nK6bajhNpy2h_EfuNs4tf7Peprgk0vE')
+
+
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///BasicDetails.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 db=SQLAlchemy(app)
+
 
 #LOGIN
 # Define the User model
@@ -35,6 +42,34 @@ class User(db.Model):
 def index():
     return render_template('login.html')
 
+
+
+@app.route('/customer_orders')
+def customer_orders():
+    return render_template('customer_orders.html')
+
+@app.route('/order_summary', methods=['POST'])
+def order_summary():
+    start = request.form['start']
+    end = request.form['end']
+    drone_name=''
+    weight_of_food=600
+
+    if weight_of_food <= 300:
+        drone_name='Iris'
+    elif 300 < weight_of_food <= 500:
+        drone_name='Verdant'
+    elif 500 < weight_of_food <= 1000:
+        drone_name='Jupiter'
+    else:
+        drone_name='Nebula'
+
+    now = datetime.now()
+    directions_result = gmaps.directions(start, end, mode="driving", departure_time=now)
+    distance = directions_result[0]['legs'][0]['distance']['text']
+    duration = directions_result[0]['legs'][0]['duration']['text']
+    return render_template('order_summary.html', distance=distance, duration=duration, drone_name=drone_name, weight_of_food=weight_of_food)
+
 @app.route('/login', methods=['POST'])
 def login():
     if request.method == 'POST':
@@ -42,9 +77,12 @@ def login():
         password = request.form['password']
 
         # Check if the entered username and password match the predefined values
-        if username == "username" and password == "password":
+        if username == "user" and password == "user@123":
             # Authentication successful, redirect to a protected page
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('customer_orders'))
+        elif username == "admin" and password == "admin@123":
+            # Authentication successful, redirect to a protected page
+            return redirect(url_for('BasicDetailsview'))
         else:
             # Authentication failed, display an error message
             error = 'Invalid username or password'
@@ -53,11 +91,10 @@ def login():
 
 
 
-@app.route('/timetable')
+@app.route('/orders_for_the_month')
 def timetable():
-    return render_template('facultyTimetable.html')
+    return render_template('orders_for_the_month.html')
 
-    
 
 
 #SESSION BASIC DETAILS TABLE
@@ -79,7 +116,7 @@ class BasicDetails(db.Model):
 #returns an object which prints details
     def __repr__(self) ->str:
         return f'{self.sno} - {self.first_name}'
-
+    
 
 #Main Page
 @app.route('/')#what address is the function displayed on
@@ -362,31 +399,39 @@ def filter_attendances(attendances, filter_date, filter_session):
     return filtered_attendances
 
 
-@app.route('/TwilioForm',methods=['GET','POST'])
+@app.route('/TwilioForm', methods=['GET', 'POST'])
 def TwilioForm():
-    if request.method=="POST":
-        account_sid=request.form['sid']
-        auth_token=request.form['token']
-        twwpfrom=request.form['wpfrom']
-        twwpto=request.form['wpto']
-        twmsg=request.form['msg']
+    try:
+        if request.method == "POST":
+            account_sid = request.form['sid']
+            auth_token = request.form['token']
+            twwpfrom = request.form['wpfrom']
+            twwpto = request.form['wpto']
+            twmsg = request.form['msg']
 
+            client = Client(account_sid, auth_token)
 
-        client = Client(account_sid, auth_token)
+            message = client.messages.create(
+                body=twmsg,
+                from_='whatsapp:' + twwpfrom,
+                to='whatsapp:' + twwpto
+            )
 
-        message = client.messages \
-        .create(
-            body=twmsg,
-            from_='whatsapp:'+twwpfrom,
-            to='whatsapp:'+twwpto
-        )
+            print(message.sid)
 
-        print(message.sid)
-        
+            # Do not redirect on form submission success to avoid infinite loop
+            return render_template('TwilioForm.html')
 
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        # Redirect to the same page even if there is an error
+        return redirect(url_for('TwilioForm'))
+
+    # Render the template for GET requests
     return render_template('TwilioForm.html')
 
 
+## GRAPHS SECTION
 import matplotlib.pyplot as plt
 import pandas as pd
 import io

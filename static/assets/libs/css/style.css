@@ -304,6 +304,29 @@ select.form-control {
     border-radius: 2px;
 }
 
+
+/* Style for the message when item is added */
+.item-added-msg {
+    display: none; /* Initially hide the message */
+    color: green; /* Color of the message */
+}
+
+/* Style for the green box when item is added */
+.menu-item-info.added {
+    border: 2px solid green; /* Change border color to green */
+}
+
+/* Style for the "Remove" button */
+.remove-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+}
+
+
+    
+
 textarea.form-control {
     height: auto;
     color: #71748d;
